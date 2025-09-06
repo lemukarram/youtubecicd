@@ -59,6 +59,7 @@ jobs:
             tar -xzf /tmp/$RELEASE -C \$RELEASE_DIR
             rm /tmp/$RELEASE
             echo 'APP_ENV=staging' > \$RELEASE_DIR/.env    # 👈 write env file
+            rm -rf $STAGING_PATH/current
             ln -sfn \$RELEASE_DIR $STAGING_PATH/current
             "
 
