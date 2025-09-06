@@ -1,0 +1,64 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches:
+      - master   # Deploy when master branch is updated
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Create release tarball
+        run: |
+          RELEASE="release-$(date +%Y%m%d%H%M%S).tgz"
+          echo "RELEASE=$RELEASE" >> $GITHUB_ENV
+          tar --exclude='.git' \
+              --exclude='.github' \
+              --exclude='deploy-exclude.txt' \
+              --warning=no-file-changed \
+              --ignore-failed-read \
+              -czf "$RELEASE" .
+
+      - name: Setup SSH key
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+          mkdir -p ~/.ssh
+          echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Upload release to server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          RELEASE: ${{ env.RELEASE }}
+        run: |
+          scp -P $SSH_PORT -i key.pem $RELEASE $SSH_USER@$SSH_HOST:/tmp/
+
+      - name: Deploy on staging server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          RELEASE: ${{ env.RELEASE }}
+          STAGING_PATH: ${{ secrets.STAGING_PATH }}
+        run: |
+          ssh -p $SSH_PORT -i key.pem $SSH_USER@$SSH_HOST "
+            set -e
+            RELEASE_DIR=$STAGING_PATH/releases/$(date +%Y%m%d%H%M%S)
+            mkdir -p \$RELEASE_DIR
+            tar -xzf /tmp/$RELEASE -C \$RELEASE_DIR
+            rm /tmp/$RELEASE
+            echo 'APP_ENV=staging' > \$RELEASE_DIR/.env    # 👈 write env file
+            ln -sfn \$RELEASE_DIR $STAGING_PATH/current
+          "
+
