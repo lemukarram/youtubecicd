@@ -60,4 +60,5 @@ jobs:
             rm /tmp/$RELEASE
             echo 'APP_ENV=staging' > \$RELEASE_DIR/.env    # 👈 write env file
             ln -sfn \$RELEASE_DIR $STAGING_PATH/current
+            "
 
