@@ -1,0 +1,31 @@
+name: Promote Master to Prod
+
+on:
+  workflow_dispatch:  # Run manually from GitHub Actions tab
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # default token, now has write access
+
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+      - name: Fetch all branches
+        run: git fetch --all
+
+      - name: Checkout prod branch
+        run: git checkout prod
+
+      - name: Merge master into prod
+        run: |
+          git merge origin/master --no-ff --allow-unrelated-histories -m "Promote master to prod [skip ci]"
+      
+      - name: Push to prod branch
+        run: git push origin prod
