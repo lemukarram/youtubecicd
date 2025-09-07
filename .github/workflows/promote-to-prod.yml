@@ -25,7 +25,7 @@ jobs:
 
       - name: Merge master into prod
         run: |
-          git merge origin/master --no-ff --allow-unrelated-histories -m "Promote master to prod [skip ci]"
-      
+          git merge origin/master --no-ff --allow-unrelated-histories -m "Promote master to prod"
+
       - name: Push to prod branch
         run: git push origin prod
