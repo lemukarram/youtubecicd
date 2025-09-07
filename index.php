@@ -1,3 +1,44 @@
+<?php
+// Detect environment (default = local)
+
+if (file_exists(__DIR__ . '/.env')) {
+    foreach (file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+        if (strpos($line, '=') !== false) {
+            putenv(trim($line));
+        }
+    }
+}
+
+$environment = getenv('APP_ENV') ?: 'local';
+
+// Map environments to files
+$envFiles = [
+    'local' => __DIR__ . '/.env.local',
+    'staging' => __DIR__ . '/.env.staging',
+    'production' => __DIR__ . '/.env.production',
+];
+
+$envFile = $envFiles[$environment] ?? $envFiles['local'];
+
+// Load environment file
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        if (strpos(trim($line), '#') === 0) continue;
+        list($name, $value) = array_map('trim', explode('=', $line, 2));
+        $value = trim($value, '"\'');
+        putenv("$name=$value");
+        $_ENV[$name] = $value;
+        $_SERVER[$name] = $value;
+    }
+}
+
+// Use the variable
+$appName = getenv('APP_NAME') ?: 'Default App';
+?>
+
+
+
 <!DOCTYPE html>
 <html style="font-size: 16px;" lang="en"><head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -75,7 +116,7 @@
               <div class="u-container-layout u-valign-middle-lg u-valign-middle-md u-container-layout-2">
                 <div class="u-border-no-bottom u-border-no-left u-border-no-right u-border-no-top u-container-style u-group u-group-1">
                   <div class="u-container-layout u-valign-middle-md u-valign-middle-sm u-valign-middle-xs u-container-layout-3">
-                    <h5 class="u-text u-text-1">Future innovations</h5>
+                    <h5 class="u-text u-text-1"><?php echo $appName; ?></h5>
                     <h1 class="u-text u-title u-text-2">Technology Revolution</h1>
                     <p class="u-large-text u-text u-text-variant u-text-3">The future is fast approaching, and a new era of digital innovation and disruption is here.</p>
                     <a href="#" class="u-border-none u-btn u-button-style u-palette-2-base u-btn-1">learn more</a>
