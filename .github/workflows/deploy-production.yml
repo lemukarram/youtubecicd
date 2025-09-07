@@ -1,9 +1,8 @@
-name: Deploy to Production
-
 on:
-  push:
-    branches:
-      - prod   # Deploy whenever prod branch is updated
+  workflow_run:
+    workflows: ["Promote Master to Prod"]   # 👈 exact name of your promote workflow
+    types:
+      - completed
 
 jobs:
   deploy:
