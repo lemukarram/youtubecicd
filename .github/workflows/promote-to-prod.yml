@@ -1,18 +1,19 @@
 name: Promote Master to Prod
 
 on:
-  workflow_dispatch:  # Run manually from GitHub Actions tab
+  workflow_dispatch:   # Run manually from GitHub Actions tab
 
 jobs:
   promote:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # default token, now has write access
+          token: ${{ secrets.GITHUB_TOKEN }}  # Default GitHub Actions token
 
-      - name: Set up Git user
+      - name: Configure Git
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
@@ -20,12 +21,8 @@ jobs:
       - name: Fetch all branches
         run: git fetch --all
 
-      - name: Checkout prod branch
-        run: git checkout prod
-
-      - name: Merge master into prod
+      - name: Reset prod to master
         run: |
-          git merge origin/master --no-ff --allow-unrelated-histories -m "Promote master to prod"
-
-      - name: Push to prod branch
-        run: git push origin prod
+          git checkout prod || git checkout -b prod
+          git reset --hard origin/master
+          git push origin prod --force
