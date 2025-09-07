@@ -1,3 +1,5 @@
+name: Deploy to Production
+
 on:
   workflow_run:
     workflows: ["Promote Master to Prod"]   # 👈 exact name of your promote workflow
